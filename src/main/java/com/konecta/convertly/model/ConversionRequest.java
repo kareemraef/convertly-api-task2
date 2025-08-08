@@ -1,13 +1,24 @@
 package com.konecta.convertly.model;
 
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.PositiveOrZero;
+import jakarta.validation.constraints.NotBlank;
+
 public class ConversionRequest {
+    @NotBlank(message = "Category is required")
     private String category;
+
+    @NotBlank(message = "From unit is required")
     private String fromUnit;
+
+    @NotBlank(message = "To unit is required")
     private String toUnit;
-    private double value;
+
+    @NotNull(message = "Value is required")
+    @PositiveOrZero(message = "Value must be zero or positive")
+    private Double value;
 
     public ConversionRequest() {
-        // Default constructor is REQUIRED for JSON mapping
     }
 
     public String getCategory() {

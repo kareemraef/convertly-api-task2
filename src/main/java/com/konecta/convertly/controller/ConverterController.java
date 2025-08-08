@@ -10,6 +10,8 @@ import com.konecta.convertly.model.ConversionRequest;
 import com.konecta.convertly.model.ConversionResponse;
 import com.konecta.convertly.service.ConversionService;
 
+import jakarta.validation.Valid;
+
 // import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import org.springframework.web.bind.annotation.RequestBody;
 
@@ -43,10 +45,8 @@ public class ConverterController {
     }
 
     @PostMapping("/convert")
-    public ConversionResponse convert(@RequestBody ConversionRequest request) {
+    public ConversionResponse convert(@Valid @RequestBody ConversionRequest request) {
         return conversionService.convert(request);
     }
-
-    
 
 }

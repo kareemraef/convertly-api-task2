@@ -34,7 +34,6 @@ public class ConversionService {
                         .map(String::toLowerCase)
                         .collect(Collectors.toList());
 
-            // Placeholder for future categories
             case "LENGTH":
                 return Arrays.stream(LengthUnit.values())
                         .map(Enum::name)
@@ -64,36 +63,43 @@ public class ConversionService {
         return sample;
     }
 
+    private boolean isValidEnum(String value, Class<? extends Enum<?>> enumClass) {
+        for (Enum<?> e : enumClass.getEnumConstants()) {
+            if (e.name().equalsIgnoreCase(value)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public ConversionResponse convert(ConversionRequest request) {
         String category = request.getCategory().toLowerCase();
+        String from = request.getFromUnit().toLowerCase();
+        String to = request.getToUnit().toLowerCase();
 
-        if (category.equals("temperature")) {
-            return convertTemperature(
-                    request.getFromUnit().toLowerCase(),
-                    request.getToUnit().toLowerCase(),
-                    request.getValue());
-        }
-        if (category.equals("length")) {
-            return convertLength(
-                    request.getFromUnit().toLowerCase(),
-                    request.getToUnit().toLowerCase(),
-                    request.getValue());
-        }
-        if (category.equals("weight")) {
-            return convertWeight(
-                    request.getFromUnit().toLowerCase(),
-                    request.getToUnit().toLowerCase(),
-                    request.getValue());
+        if (!category.equals("temperature") && request.getValue() < 0) {
+            return new ConversionResponse(0, "Value must be non-negative for " + category, "error");
         }
 
-        if (category.equals("time")) {
-            return convertTime(
-                    request.getFromUnit().toLowerCase(),
-                    request.getToUnit().toLowerCase(),
-                    request.getValue());
+        boolean validUnits = switch (category) {
+            case "temperature" -> isValidEnum(from, TemperatureUnit.class) && isValidEnum(to, TemperatureUnit.class);
+            case "length" -> isValidEnum(from, LengthUnit.class) && isValidEnum(to, LengthUnit.class);
+            case "weight" -> isValidEnum(from, WeightUnit.class) && isValidEnum(to, WeightUnit.class);
+            case "time" -> isValidEnum(from, TimeUnit.class) && isValidEnum(to, TimeUnit.class);
+            default -> false;
+        };
+
+        if (!validUnits) {
+            return new ConversionResponse(0, "Units don't match the selected category", "error");
         }
 
-        return new ConversionResponse(0, "Unsupported category", "failed");
+        return switch (category) {
+            case "temperature" -> convertTemperature(from, to, request.getValue());
+            case "length" -> convertLength(from, to, request.getValue());
+            case "weight" -> convertWeight(from, to, request.getValue());
+            case "time" -> convertTime(from, to, request.getValue());
+            default -> new ConversionResponse(0, "Unsupported category", "error");
+        };
     }
 
     private ConversionResponse convertTemperature(String from, String to, double value) {
@@ -131,7 +137,6 @@ public class ConversionService {
         double result = value;
         String formula;
 
-        // Convert everything to meters first
         double inMeters;
 
         switch (from) {
